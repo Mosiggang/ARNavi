@@ -414,12 +414,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tt: {fileID: 1114040580}
+  earthManager: {fileID: 0}
   ARSession: {fileID: 129177189}
   ARSessionOrigin: {fileID: 1962540545}
   ARAnchorM: {fileID: 0}
-  f: 0
-  m: {fileID: 0}
-  m2: {fileID: 0}
+  t1: {fileID: 0}
   test: {fileID: 0}
 --- !u!4 &782628377
 Transform:
@@ -620,7 +619,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1600812346
+--- !u!1 &1577749883
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -628,29 +627,49 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1600812347}
+  - component: {fileID: 1577749886}
+  - component: {fileID: 1577749887}
   m_Layer: 0
-  m_Name: VPS
+  m_Name: GeospatialHanlder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1600812347
+--- !u!4 &1577749886
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1600812346}
+  m_GameObject: {fileID: 1577749883}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.603137, y: 2.7214217, z: -4.028989}
+  m_LocalPosition: {x: 0.033300795, y: 0.13428509, z: 0.8452326}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1577749887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577749883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15998a97088b8a747a71d6583e5dcc2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tt: {fileID: 1114040580}
+  earthManager: {fileID: 1962540551}
+  ARSession: {fileID: 129177189}
+  ARSessionOrigin: {fileID: 1962540545}
+  ARAnchorM: {fileID: 1962540548}
+  t1: {fileID: 0}
+  test: {fileID: 3642040619222038110, guid: 460c8d5256da75740a872a1e1bb700b8, type: 3}
 --- !u!1 &1828601335
 GameObject:
   m_ObjectHideFlags: 0
@@ -891,7 +910,6 @@ GameObject:
   - component: {fileID: 1962540545}
   - component: {fileID: 1962540547}
   - component: {fileID: 1962540548}
-  - component: {fileID: 1962540550}
   - component: {fileID: 1962540551}
   m_Layer: 0
   m_Name: AR Session Origin
@@ -942,7 +960,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_PlanePrefab: {fileID: 0}
-  m_DetectionMode: 1
+  m_DetectionMode: -1
 --- !u!114 &1962540548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -955,27 +973,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 728ad7fae8e460a4ba41265c7308d757, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AnchorPrefab: {fileID: 914614373535226082, guid: d5308a8a902099a4d9c98f161baa9f0b, type: 3}
---- !u!114 &1962540550
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1962540543}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 15998a97088b8a747a71d6583e5dcc2c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tt: {fileID: 1114040580}
-  ARSession: {fileID: 129177189}
-  ARSessionOrigin: {fileID: 1962540545}
-  ARAnchorM: {fileID: 1962540548}
-  f: 0
-  m: {fileID: 2100000, guid: 32d97161c13800c4f938f40d4cc28ce7, type: 2}
-  m2: {fileID: 2100000, guid: fb79398e99510ed4ea3ce058159d28d6, type: 2}
-  test: {fileID: 3642040619222038110, guid: 460c8d5256da75740a872a1e1bb700b8, type: 3}
+  m_AnchorPrefab: {fileID: 0}
 --- !u!114 &1962540551
 MonoBehaviour:
   m_ObjectHideFlags: 0
