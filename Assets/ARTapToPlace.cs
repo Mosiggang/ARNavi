@@ -20,11 +20,7 @@ public class ARTapToPlace : MonoBehaviour
     public ARSession ARSession;
     public ARSessionOrigin ARSessionOrigin;
     public ARAnchorManager ARAnchorM;
-    private GameObject[] placeObject;
     private ARGeospatialAnchor[] anchor;
-    private LineRenderer[] lines = new LineRenderer[15];
-    private bool setAnchor = true;
-    public GameObject t1, test;
     double[] len;
     // Start is called before the first frame update
     void Start()
@@ -47,12 +43,10 @@ public class ARTapToPlace : MonoBehaviour
                 Debug.Log(mockLocation.lat + ", " + mockLocation.lng);
                 allCoordi.Add(new double[]{mockLocation.lat ,mockLocation.lng});
             }
-            //allCoordi.Add(new double[] { androidCoordi[i,0], androidCoordi[i,1] });
         }
         
         Debug.Log("ARR LENG: " + allCoordi.Count);
         anchor = new ARGeospatialAnchor[allCoordi.Count];
-        placeObject = new GameObject[allCoordi.Count];
         len = new double[allCoordi.Count];
     }
 
@@ -63,91 +57,12 @@ public class ARTapToPlace : MonoBehaviour
     }
     private void GeoAR()
     {
-        int cnt = 0;
         var earthTrackingState = earthManager.EarthTrackingState;
         if (earthTrackingState == TrackingState.Tracking)
         {
             Debug.Log("Working 1" + (earthManager == null));
             var cameraGeospatialPose = earthManager.CameraGeospatialPose;
             Debug.Log("Working 1-1");
-            /*if (setAnchor)
-            {
-                for (int i = 0; i < allCoordi.Count; i++)
-                {
-                    Destroy(anchor[i]);
-                    anchor[i] = ARAnchorM.AddAnchor(allCoordi[i][0], allCoordi[i][1], 5, Quaternion.identity);       
-                    Debug.Log("Working 1-2 ww ");
-                
-                }
-                setAnchor = false;
-            }*/
-            /*for (int i = 0; i < allCoordi.Count; i++)
-            {
-
-                len[i] = getPathLength(new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude), new MockLocation(allCoordi[i][0], allCoordi[i][1]));
-
-                if (getPathLength(new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude), new MockLocation(allCoordi[i][0], allCoordi[i][1])) < 20.0f)
-                {
-                    Destroy(anchor[i]);
-                    anchor[i] = ARAnchorM.AddAnchor(allCoordi[i][0], allCoordi[i][1], cameraGeospatialPose.Altitude - 2, Quaternion.identity);
-                    if (anchor[i] != null)
-                    {
-                        Destroy(placeObject[i]);
-                        placeObject[i] = Instantiate(test, anchor[i].transform);
-                        anchor[i].gameObject.SetActive(true);
-                        cnt++;
-                        textP.text = "IS TRACKING:" + cameraGeospatialPose.Latitude + ", " + cameraGeospatialPose.Longitude + ", " + cameraGeospatialPose.Altitude + ", " + allCoordi.Count + "/" + i + " Instantiated, " + cnt + "anchors";
-                    }
-                    else
-                    {
-                        textP.text = "IS TRACKING ANCHOR NOT MARKED";
-                    }
-                }*/
-            /*for (int i = 0; i < allCoordi.Count; i++)
-            {
-                DestroyImmediate(placeObject[i]);
-                DestroyImmediate(anchor[i]);
-                anchor.Clear();
-            }
-            for (int i = 0; i < allCoordi.Count; i++)
-            {
-                if(getPathLength(new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude), new MockLocation(allCoordi[i][0], allCoordi[i][1])) < 20.0)
-                {
-                    anchor.Add(ARAnchorManagerExtensions.AddAnchor(ARAnchorM, allCoordi[i][0], allCoordi[i][1], cameraGeospatialPose.Altitude - 2, Quaternion.identity));
-                }     
-            }
-            for(int i = 0; i < anchor.Count; i++)
-            {
-                placeObject.Add(Instantiate(test, anchor[i].transform));
-                anchor[i].gameObject.SetActive(true);
-            }*/
-            /*for (int i = 0; i < 16; i++)
-            {
-                DestroyImmediate(placeObject[i]);
-                DestroyImmediate(anchor[i]);
-            }
-            var alti = cameraGeospatialPose.Altitude - 2;
-            anchor[0] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM,37.88398138901406, 127.73343466933132, alti, Quaternion.identity);
-            anchor[1] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.8839871194505, 127.73343749702332, alti, Quaternion.identity);
-            anchor[2] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.883998228750364, 127.73340972144396, alti, Quaternion.identity);
-            anchor[3] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88425375637654, 127.73350692722941, alti, Quaternion.identity);
-            anchor[4] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88454816862451, 127.73361801948475, alti, Quaternion.identity);
-            anchor[5] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88463427012807, 127.73364023712753, alti, Quaternion.identity);
-            anchor[6] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.884703706282956, 127.73362912496584, alti, Quaternion.identity);
-            anchor[7] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88481480337433, 127.73357079364295, alti, Quaternion.identity);
-            anchor[8] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88502033277832, 127.73345135396714, alti, Quaternion.identity);
-            anchor[9] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.8854452817081, 127.73336523807478, alti, Quaternion.identity);
-            anchor[10] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88545084371525, 127.7337457588266, alti, Quaternion.identity);
-            anchor[11] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.885456403131876, 127.73398740333147, alti, Quaternion.identity);
-            anchor[12] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88545363572912, 127.73452624325257, alti, Quaternion.identity);
-            anchor[13] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.8854814148854, 127.73477344214757, alti, Quaternion.identity);
-            anchor[14] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.885606404741395, 127.73500952805584, alti, Quaternion.identity);
-            anchor[15] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, 37.88570084151001, 127.73518728684762, alti, Quaternion.identity);
-            for(int i = 0; i < 16; i++)
-            {
-                placeObject[i] = Instantiate(test, anchor[i].transform);
-                anchor[i].gameObject.SetActive(false);
-            }*/
             for (int i = 0; i < allCoordi.Count; i++)
             {
                 if (getPathLength(new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude), new MockLocation(allCoordi[i][0], allCoordi[i][1])) < 20.0f)
