@@ -11,10 +11,9 @@ GameObject:
   - component: {fileID: 9100870341233021515}
   - component: {fileID: 3994868121562151122}
   - component: {fileID: 1630424421067108746}
-  - component: {fileID: 5866933622810776348}
   m_Layer: 0
   m_Name: ets
-  m_TagString: Untagged
+  m_TagString: GeoAnchor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -62,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 32d97161c13800c4f938f40d4cc28ce7, type: 2}
+  - {fileID: 2100000, guid: 0202c11d3356d944dacb9f78c0cc23c3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -84,16 +83,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &5866933622810776348
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3642040619222038110}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}

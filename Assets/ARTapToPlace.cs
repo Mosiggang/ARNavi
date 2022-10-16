@@ -1,93 +1,101 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.XR.ARSubsystems;
-using UnityEngine.XR.ARFoundation;
 using Google.XR.ARCoreExtensions;
+using System;
+using System.Collections.Generic;
 using TMPro;
+using UnityEngine;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 public class ARTapToPlace : MonoBehaviour
 {
-    private const long RADIUS_OF_EARTH = 6371000;
-    private double[,] androidCoordi = new double[,] { { 37.883981, 127.733434 },{ 37.883987, 127.733437 }, { 37.883998, 127.733409 }, { 37.884253, 127.733506 } ,{ 37.884548, 127.733618 } ,{ 37.884634, 127.733640 },
-                                                       {37.884703, 127.733629 },{37.884814, 127.733570 },{37.885020, 127.733451 },{37.885445, 127.733365 },{37.885450, 127.733745 },{37.885456, 127.733987 },{37.885453, 127.734526 },
-                                                        {37.885481, 127.734773 },{37.885606, 127.735009 },{37.885700, 127.735187 }};
-    private List<double[]> allCoordi = new List<double[]>();
-    private int interval = 1;
-    public GameObject tt;
-    private TextMeshProUGUI textP;
-    public AREarthManager earthManager;
-    private ARCoreExtensionsConfig config;
-    public ARSession ARSession;
-    public ARSessionOrigin ARSessionOrigin;
-    public ARAnchorManager ARAnchorM;
+    private const long RADIUS_OF_EARTH = 6371000;//추가 좌표 계산에 필요한 지구의 반지름
+    private double[,] androidCoordi = new double[,] { {37.88398138901406, 127.73343466933132  },{ 37.8839871194505, 127.73343749702332 },{  37.883998228750364, 127.73340972144396 },{ 37.88425375637654, 127.73350692722941 },
+                                                        {37.88454816862451, 127.73361801948475  },{  37.88463427012807, 127.73364023712753},{  37.884703706282956, 127.73362912496584 }, {37.88481480337433, 127.73357079364295  },
+                                                        { 37.88502033277832, 127.73345135396714 },{37.8854452817081, 127.73336523807478}, {37.88545084371525, 127.7337457588266 } ,{37.885456403131876, 127.73398740333147 } ,
+                                                        { 37.88545363572912, 127.73452624325257} ,{ 37.8854814148854, 127.73477344214757 } ,{ 37.885606404741395, 127.73500952805584}, { 37.88570084151001, 127.73518728684762} };//안드로이드 앱으로부터 받아올 좌표들 예시 (동보빌라 -> 공학관)
+    // private double[,] androidCoordi = new double[,] { {37.88610080930872, 127.73595664937827}, { 37.886336901334275, 127.7364066014071 },{ 37.88641189540352, 127.73655658552666},{ 37.88652577502739, 127.73677045156494},{ 37.88679519873534, 127.73733983617593},{ 37.886839640131726, 127.7374537133786 },{ 37.8869090796549, 127.73762314033763},
+    // {37.887072961906796, 127.73828974145636},{37.887072966156346, 127.73851749850172},{37.887070195490864 , 127.73888135435189},{37.88693410701028, 127.73924521416241}};//기숙사 6관 -> 대학본부
+    /*private double[,] androidCoordi = new double[,] { { 37.61265527436122, 126.84577904476235 },{ 37.6128635831008, 126.84575959621507 },{ 37.61285524552988, 126.84546795640372 } ,{ 37.612999672964925, 126.84545684223166},
+                                                        {37.61299689466733, 126.84540962439775},{37.61299411632014, 126.84535962903959} ,{37.61298021669888,126.84466802589303},{37.612944087871085, 126.8434403611937},
+                                                        {37.61294964079645, 126.84332926006708},{37.6129857465642, 126.84326537599071}, {37.61303296244744, 126.8432181567464} ,{37.61364955709515, 126.84320425172919},
+                                                        {37.61392730254348, 126.84320424389298},{37.61438002757444, 126.8432014535955},{37.615382688591836, 126.84319864778104}, {37.61539103042753, 126.8437291546757}, 
+                                                        {37.61539103166738, 126.84379859278171},{37.615418810526826, 126.84404023660692}, {37.615449364609056, 126.84415689176294}, {37.61557435621035, 126.84450130124203},
+                                                        {37.615638239696764, 126.8446151779333}, {37.6157049001417, 126.84470127930378}, {37.61579099949465, 126.84460406352575}}; 강매역 1번 출구 -> 소만마을동성 10단지 아파트 상가 */
+    private String[] description = { "3m 이동", "우회전 후 167m 이동 ", "우회전 후 보행자도로 을 따라 169m 이동 ", "보행자도로, 169m", "도착" };
+    private List<double[]> allCoordi = new List<double[]>();//일반 좌표와 추가 좌표를 저장할 리스트
+    private int interval = 1;//일반 좌표들 사이에 있는 추가 좌표들의 간격
+    private TextMeshProUGUI textP;//텍스트를 표시할 GUI
+    public AREarthManager earthManager;//ARSessionOrigin에 있는 위치 파악을 기능을 위한 AREarthManager 컴포넌트
+    private ARCoreExtensionsConfig config;//ARCoreExtensionConfig의 Geospatial 기능을 확인할 가진 컴포넌트(설정 확인용)
+    public ARSession ARSession;//ARCore를 사용하기 위해 필요한 AR Session
+    public ARSessionOrigin ARSessionOrigin;//ARCore를 사용하기 위해 필요한 ARSessionOrigin
+    public ARAnchorManager ARAnchorM;//AR 오브젝트(AR 앵커)를 관리하는 ARAnchorManager 컴포넌트
     private ARGeospatialAnchor[] anchor;
-    double[] len;
     // Start is called before the first frame update
     void Start()
     {
-        textP = tt.GetComponent<TextMeshProUGUI>();
-        config = new ARCoreExtensionsConfig();
-        config.GeospatialMode = GeospatialMode.Enabled;
-        earthManager = ARSessionOrigin.GetComponent<AREarthManager>();
-        ARAnchorM = ARSessionOrigin.GetComponent<ARAnchorManager>();
-
-        for(int i = 0; i < androidCoordi.GetLength(0) - 1; i++)
+        //config = new ARCoreExtensionsConfig();
+        //config.GeospatialMode = GeospatialMode.Enabled;
+        earthManager = ARSessionOrigin.GetComponent<AREarthManager>();//ARSessionOrigin에 등록된 AREarthManager 컴포넌트를 가져옴
+        ARAnchorM = ARSessionOrigin.GetComponent<ARAnchorManager>();//ARSessionOrigin에 등록된 ARAnchorManager 컴포넌트를 가져옴
+        Debug.Log("LEN : " + androidCoordi.GetLength(0));//일반 좌표의 개수 확인
+        for (int i = 0; i < androidCoordi.GetLength(0) - 1; i++)//일반 좌표들을 2개씩 가져오기 때문에 개수 - 1 까지만 반복문 실행
         {
-            MockLocation start = new MockLocation(androidCoordi[i, 0], androidCoordi[i, 1]);
-            MockLocation end = new MockLocation(androidCoordi[i + 1, 0], androidCoordi[i + 1, 1]);
-            
-            double azimuth = calculateBearing(start, end);
-            List<MockLocation> coords = getLocations(interval, azimuth, start, end);
+            MockLocation start = new MockLocation(androidCoordi[i, 0], androidCoordi[i, 1],0);//일반 좌표 객체1 생성
+            MockLocation end = new MockLocation(androidCoordi[i + 1, 0], androidCoordi[i + 1, 1],0);//일반 좌표 객체2 생성
+
+            double azimuth = calculateBearing(start, end);//두 좌표 사이 각도 계산
+            //Debug.Log("Bearing: " + azimuth + ", sLAT: " + start.lat + ", sLONG: " + start.lng + ", eLAT: " + end.lat + ", eLONG: " + end.lng);
+            List<MockLocation> coords = getLocations(interval, azimuth, start, end);//두 일반 좌표 사이에 있는 추가 좌표를 interval 미터 간격으로 계산해 리스트에 저장
             foreach (MockLocation mockLocation in coords)
             {
-                Debug.Log(mockLocation.lat + ", " + mockLocation.lng);
-                allCoordi.Add(new double[]{mockLocation.lat ,mockLocation.lng});
+                Debug.Log(mockLocation.lat + ", " + mockLocation.lng + ", " + mockLocation.rot);
+                allCoordi.Add(new double[] { mockLocation.lat, mockLocation.lng, mockLocation.rot });//일반 좌표 1, 추가좌표들, 일반 좌표2의 방법으로 순서를 지켜 리스트에 저장 
             }
         }
-        
+
         Debug.Log("ARR LENG: " + allCoordi.Count);
-        anchor = new ARGeospatialAnchor[allCoordi.Count];
-        len = new double[allCoordi.Count];
+        anchor = new ARGeospatialAnchor[allCoordi.Count];//AR 오브젝트(AR 앵커)를 저장할 배열 생성 (길이 == 모든 좌표들의 개수)
     }
 
     // Update is called once per frame
     void Update()
     {
-            GeoAR();
+        GeoAR();
     }
     private void GeoAR()
     {
-        var earthTrackingState = earthManager.EarthTrackingState;
-        if (earthTrackingState == TrackingState.Tracking)
+        var earthTrackingState = earthManager.EarthTrackingState;//스마트폰의 위치 추적 상태를 저장
+        if (earthTrackingState == TrackingState.Tracking)//위치 추적이 가능한 상태면 AR 기능 작동
         {
-            Debug.Log("Working 1" + (earthManager == null));
-            var cameraGeospatialPose = earthManager.CameraGeospatialPose;
-            Debug.Log("Working 1-1");
-            for (int i = 0; i < allCoordi.Count; i++)
+            //Debug.Log("Working 1" + (earthManager == null));
+            var cameraGeospatialPose = earthManager.CameraGeospatialPose;//스마트폰의 현재 위치 정보 저장
+            //Debug.Log("Working 1-1");
+            for (int i = 0; i < allCoordi.Count; i++)//모든 좌표들의 개수만큼 반복
             {
-                if (getPathLength(new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude), new MockLocation(allCoordi[i][0], allCoordi[i][1])) < 20.0f)
+                if (getPathLength(new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude,0), new MockLocation(allCoordi[i][0], allCoordi[i][1],0)) < 20.0)// 리스트 안의 좌표가 스마트폰과 20미터 안에 있다면 실행
                 {
-                    DestroyImmediate(anchor[i]);
-                    anchor[i] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, allCoordi[i][0], allCoordi[i][1], cameraGeospatialPose.Altitude - 2, Quaternion.identity);
+                    DestroyImmediate(anchor[i]);//한 위치에 여러개의 AR 오브젝트(AR 앵커)가 생기는걸 방지하기 위해 기존 앵커 삭제
+                    anchor[i] = ARAnchorManagerExtensions.AddAnchor(ARAnchorM, allCoordi[i][0], allCoordi[i][1], cameraGeospatialPose.Altitude - 2, Quaternion.AngleAxis(-((float)allCoordi[i][2] + 40.0f),Vector3.up));//정해진 좌표에 사용자의 높이보다 -2 만큼 낮은 높이에 AR 오브젝트(AR 앵커)생성, AR 오브젝트를 다음 일반 좌표쪽으로 회전
                 }
-                textP.text = "IS TRACKING:" + cameraGeospatialPose.Latitude + ", " + cameraGeospatialPose.Longitude + ", " + cameraGeospatialPose.Altitude;
+                textP.text = "IS TRACKING:" + cameraGeospatialPose.Latitude + ", " + cameraGeospatialPose.Longitude + ", " + cameraGeospatialPose.Altitude;//텍스트로 현재 위치 좌표와 고도 표시
             }
         }
-        else
+        else//위치 추척 불가능 시 텍스트만 변경
         {
-            Debug.Log("Working 11");
+            //Debug.Log("Working 11");
             textP.text = "NO TRACKING";
         }
     }
-    private class MockLocation
+    private class MockLocation//좌표 객체 클래스
     {
-        public double lat;
-        public double lng;
-
-        public MockLocation(double lat, double lng)
+        public double lat;//좌표 객체의 위도
+        public double lng;//좌표 객체의 경도
+        public double rot;//다음 좌표 객체 사이의 방위각
+        public MockLocation(double lat, double lng, double rot)//좌표 객체 생성자
         {
-            this.lat = lat;
-            this.lng = lng;
+            this.lat = lat;//좌표 객체의 위도 설정
+            this.lng = lng;//좌표 객체의 경도 설정
+            this.rot = rot;//다음 좌표 객체 사이의 방위각 설정
         }
 
         public string toString()
@@ -95,76 +103,73 @@ public class ARTapToPlace : MonoBehaviour
             return "(" + lat + "," + lng + ")";
         }
     }
-    private static List<MockLocation> getLocations(int interval, double azimuth, MockLocation start, MockLocation end)
+    private static List<MockLocation> getLocations(int interval, double azimuth, MockLocation start, MockLocation end)// 두 일반 좌표 사이의 추가 좌표를 모두 계산하는 함수
     {
 
         double d = getPathLength(start, end);
         int dist = (int)d / interval;
         int coveredDist = interval;
         List<MockLocation> coords = new List<MockLocation>();
-        coords.Add(new MockLocation(start.lat, start.lng));
+        coords.Add(new MockLocation(start.lat, start.lng, azimuth));
         for (int distance = 0; distance < dist; distance += interval)
         {
             MockLocation coord = getDestinationLatLng(start.lat, start.lng, azimuth, coveredDist);
             coveredDist += interval;
             coords.Add(coord);
         }
-        //coords.Add(new MockLocation(end.lat, end.lng));
-
         return coords;
     }
-    private static double getPathLength(MockLocation start, MockLocation end)
+    private static double getPathLength(MockLocation start, MockLocation end)// 두 일반 좌표 사이의 거리를 계산하는 함수
     {
-        
-        float lat1Rads = Mathf.Deg2Rad * (float)start.lat;
-        float lat2Rads = Mathf.Deg2Rad * (float)end.lat;
-        float deltaLat = Mathf.Deg2Rad * ((float)end.lat - (float)start.lat);
 
-        float deltaLng = Mathf.Deg2Rad * ((float)end.lng - (float)start.lng);
-        
-        float a = Mathf.Sin(deltaLat / 2) * Mathf.Sin(deltaLat / 2)
-                + Mathf.Cos(lat1Rads) * Mathf.Cos(lat2Rads) * Mathf.Sin(deltaLng / 2) * Mathf.Sin(deltaLng / 2);
-        double c = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
+        double lat1Rads = Mathf.Deg2Rad * start.lat;
+        double lat2Rads = Mathf.Deg2Rad * end.lat;
+        double deltaLat = Mathf.Deg2Rad * (end.lat - start.lat);
+        double deltaLng = Mathf.Deg2Rad * (end.lng - start.lng);
+
+        double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2)
+                + Math.Cos(lat1Rads) * Math.Cos(lat2Rads) * Math.Sin(deltaLng / 2) * Math.Sin(deltaLng / 2);
+        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         double d = RADIUS_OF_EARTH * c;
         return d;
     }
-    private static MockLocation getDestinationLatLng(double lat, double lng, double azimuth, double distance)
+    private static MockLocation getDestinationLatLng(double lat, double lng, double azimuth, double distance)// 두 일반 좌표 사이 중 시작 좌표에서 azimuth 각도로 distance 거리만큼 떨어진 추가 좌표 1개를 계산하는 함수
     {
-        float radiusKm = RADIUS_OF_EARTH / 1000; // Radius of the Earth in km
-        float brng = Mathf.Deg2Rad * (float)azimuth; // Bearing is degrees converted to radians.
-        float d = (float)distance / 1000; // Distance m converted to km
-        float lat1 = Mathf.Deg2Rad * (float)lat; // Current dd lat point converted to radians
-        float lon1 = Mathf.Deg2Rad * (float)lng; // Current dd long point converted to radians
-        float lat2 = Mathf.Asin(Mathf.Sin(lat1) * Mathf.Cos(d / radiusKm) + Mathf.Cos(lat1) * Mathf.Sin(d / radiusKm) * Mathf.Cos(brng));
-        double lon2 = lon1 + Mathf.Atan2(Mathf.Sin(brng) * Mathf.Sin(d / radiusKm) * Mathf.Cos(lat1),
-                Mathf.Cos(d / radiusKm) - Mathf.Sin(lat1) * Mathf.Sin(lat2));
+        double radiusKm = RADIUS_OF_EARTH / 1000; // Radius of the Earth in km
+        double brng = Mathf.Deg2Rad * azimuth; // Bearing is degrees converted to radians.
+        double d = distance / 1000; // Distance m converted to km
+        double lat1 = Mathf.Deg2Rad * lat; // Current dd lat point converted to radians
+        double lon1 = Mathf.Deg2Rad * lng; // Current dd long point converted to radians
+        double lat2 = Math.Asin(Math.Sin(lat1) * Math.Cos(d / radiusKm) + Math.Cos(lat1) * Math.Sin(d / radiusKm) * Math.Cos(brng));
+        double lon2 = lon1 + Math.Atan2(Math.Sin(brng) * Math.Sin(d / radiusKm) * Math.Cos(lat1),
+                Math.Cos(d / radiusKm) - Math.Sin(lat1) * Math.Sin(lat2));
         // convert back to degrees
-        
+
         lat2 = Mathf.Rad2Deg * (lat2);
         lon2 = Mathf.Rad2Deg * (lon2);
-        return new MockLocation(lat2, lon2);
+        return new MockLocation(lat2, lon2, azimuth);
     }
 
-    private static double calculateBearing(MockLocation start, MockLocation end)
+    private static double calculateBearing(MockLocation start, MockLocation end)//두 일반 좌표 사이의 방위각을 계산하는 함수
     {
-        float startLat = Mathf.Deg2Rad * (float)(start.lat);
-        float startLong = Mathf.Deg2Rad * (float)(start.lng);
-        float endLat = Mathf.Deg2Rad * (float)(end.lat);
-        float endLong = Mathf.Deg2Rad * (float)(end.lng);
-        float dLong = endLong - startLong;
-        float dPhi = Mathf.Log(Mathf.Tan((endLat / 2.0f) + (Mathf.PI / 4.0f)) / Mathf.Tan((startLat / 2.0f) + (Mathf.PI / 4.0f)));
-        if (Mathf.Abs(dLong) > Mathf.PI)
+        double startLat = Mathf.Deg2Rad * (start.lat);
+        double startLong = Mathf.Deg2Rad * (start.lng);
+        double endLat = Mathf.Deg2Rad * (end.lat);
+        double endLong = Mathf.Deg2Rad * (end.lng);
+        double dLong = endLong - startLong;
+        double dPhi = Math.Log(Math.Tan((endLat / 2.0) + (Math.PI / 4.0)) / Math.Tan((startLat / 2.0) + (Math.PI / 4.0)));
+        if (Math.Abs(dLong) > Math.PI)
         {
             if (dLong > 0.0)
             {
-                dLong = -(2.0f * Mathf.PI - dLong);
+                dLong = -(2.0f * Math.PI - dLong);
             }
             else
             {
-                dLong = (2.0f * Mathf.PI + dLong);
+                dLong = (2.0f * Math.PI + dLong);
             }
         }
-        double bearing = (Mathf.Deg2Rad * (Mathf.Atan2(dLong, dPhi)) + 360.0) % 360.0;
+        var bearing = (Mathf.Rad2Deg * (Math.Atan2(dLong, dPhi)) + 360.0) % 360.0;
         return bearing;
     }
 }
