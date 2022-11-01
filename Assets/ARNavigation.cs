@@ -39,10 +39,6 @@ public class ARNavigation : MonoBehaviour
     private List<MockLocation> descriptionPoints = new List<MockLocation>();
     //private List<String> testDescriptions = new List<String> { "출발", "테스트 점 1", " 테스트 점2", "도착" };
     private List<String> testDescriptions = new List<String> { "출발", "우회전 후 150m 이동", " 직진 112m 이동", "도착" };
-    private double[,] androidCoordi = new double[,] { {37.88398138901406, 127.73343466933132  },{ 37.8839871194505, 127.73343749702332 },{  37.883998228750364, 127.73340972144396 },{ 37.88425375637654, 127.73350692722941 },
-                                                        {37.88454816862451, 127.73361801948475  },{  37.88463427012807, 127.73364023712753},{  37.884703706282956, 127.73362912496584 }, {37.88481480337433, 127.73357079364295  },
-                                                        { 37.88502033277832, 127.73345135396714 },{37.8854452817081, 127.73336523807478}, {37.88545084371525, 127.7337457588266 } ,{37.885456403131876, 127.73398740333147 } ,
-                                                        { 37.88545363572912, 127.73452624325257} ,{ 37.8854814148854, 127.73477344214757 } ,{ 37.885606404741395, 127.73500952805584}, { 37.88570084151001, 127.73518728684762} };//안드로이드 앱으로부터 받아올 좌표들 예시 (동보빌라 -> 공학관)
     private List<MockLocation> allCoordi = new List<MockLocation>();//일반 좌표와 추가 좌표를 저장할 리스트
     private int interval = 1;//일반 좌표들 사이에 있는 추가 좌표들의 간격
     public TextMeshProUGUI textP;//텍스트를 표시할 GUI
@@ -59,29 +55,9 @@ public class ARNavigation : MonoBehaviour
     {
         earthManager = ARSessionOrigin.GetComponent<AREarthManager>();//ARSessionOrigin에 등록된 AREarthManager 컴포넌트를 가져옴
         ARAnchorM = ARSessionOrigin.GetComponent<ARAnchorManager>();//ARSessionOrigin에 등록된 ARAnchorManager 컴포넌트를 가져옴
-        for (int i = 0; i < testAllPoint.Count - 1; i++)
-        {
-            MockLocation loc1 = new MockLocation(testAllPoint[i][0], testAllPoint[i][1], 0);
-            MockLocation loc2 = new MockLocation(testAllPoint[i + 1][0], testAllPoint[i + 1][1], 0);
-            double rot = calculateBearing(loc1, loc2);
-            MockLocation loc = new MockLocation(testAllPoint[i][0], testAllPoint[i][1], rot);
-            Debug.Log("ALLP: " + testAllPoint[i][0] + ", " + testAllPoint[i][1] + ", " + rot);
-            tMLoc.Add(loc);
-        }
-        MockLocation locFin = new MockLocation(testAllPoint[testAllPoint.Count - 1][0], testAllPoint[testAllPoint.Count - 1][1], 0);
-        tMLoc.Add(locFin);
-        for (int i = 0; i < testDescriptionPoints.Count - 1; i++)
-        {
-            MockLocation loc1 = new MockLocation(testDescriptionPoints[i][0], testDescriptionPoints[i][1], 0);
-            MockLocation loc2 = new MockLocation(testDescriptionPoints[i + 1][0], testDescriptionPoints[i + 1][1], 0);
-            double r = calculateBearing(loc1, loc2);
-            MockLocation loc = new MockLocation(testDescriptionPoints[i][0], testDescriptionPoints[i][1], r);
-            Debug.Log("DESCP: " + testDescriptionPoints[i][0] + ", " + testDescriptionPoints[i][1] + ", " + r);
-            descriptionPoints.Add(loc);
-        }
-        MockLocation locD = new MockLocation(testAllPoint[testAllPoint.Count - 1][0], testAllPoint[testAllPoint.Count - 1][1], 90);
-        descriptionPoints.Add(locD);
-        anchor = new ARGeospatialAnchor[descriptionPoints.Count];
+
+        calculateAllCoordinates();
+
        
     }
 
@@ -97,13 +73,32 @@ public class ARNavigation : MonoBehaviour
     private void GeoAR()
     {
 
+        if (realAllPoints.Count == inputAllPlen && realDescriptionPoints.Count == inputDescPlen && realDescriptions.Count == inputDesclen && initCoordinates)
+        {
+
+            calculateAllCoordinates();
+            initCoordinates = false;
+            for (int i = 0; i < realDescriptionPoints.Count - 1; i++)
+            {
+                MockLocation loc1 = new MockLocation(realDescriptionPoints[i][0], realDescriptionPoints[i][1], 0);
+                MockLocation loc2 = new MockLocation(realDescriptionPoints[i + 1][0], realDescriptionPoints[i + 1][1], 0);
+                double r = calculateBearing(loc1, loc2);
+                MockLocation loc = new MockLocation(realDescriptionPoints[i][0], realDescriptionPoints[i][1], r);
+                descriptionPoints.Add(loc);
+            }
+
+            MockLocation locD = new MockLocation(realDescriptionPoints[realDescriptionPoints.Count - 1][0], realDescriptionPoints[realDescriptionPoints.Count - 1][1], 40);
+            descriptionPoints.Add(locD);
+            anchor = new ARGeospatialAnchor[descriptionPoints.Count];
+        }
         var earthTrackingState = earthManager.EarthTrackingState;//스마트폰의 위치 추적 상태를 저장
-        if (earthTrackingState == TrackingState.Tracking)//위치 추적이 가능한 상태면 AR 기능 작동
+        if (earthTrackingState == TrackingState.Tracking && !initCoordinates)//위치 추적이 가능한 상태면 AR 기능 작동
         {
             var cameraGeospatialPose = earthManager.CameraGeospatialPose;//스마트폰의 현재 위치 정보 저장
             var isDescript = false;
-
+            var isInPath = false;
             MockLocation user = new MockLocation(cameraGeospatialPose.Latitude, cameraGeospatialPose.Longitude, 0);
+
             for (int i = 0; i < descriptionPoints.Count; i++)
             {
                 var pathLength = getPathLength(user, descriptionPoints[i]);
@@ -126,15 +121,15 @@ public class ARNavigation : MonoBehaviour
                         aziDiff += 360;
                     }
 
-                    if (aziDiff < 30 || aziDiff > 330)
+                    if (aziDiff < 30 || aziDiff > 320)
                     {
                         textP.text = "정면에 있음";
                     }
-                    else if (aziDiff > 30 && aziDiff < 170)
+                    else if (aziDiff > 30 && aziDiff < 160)
                     {
                         textP.text = "왼쪽에 있음";//텍스트로 현재 위치의 안내 출력
                     }
-                    else if (aziDiff > 230 && aziDiff < 330)
+                    else if (aziDiff > 230 && aziDiff < 320)
                     {
                         textP.text = "오른쪽에 있음";
                     }
@@ -152,29 +147,29 @@ public class ARNavigation : MonoBehaviour
                     {
                         ARAnchorM.anchorPrefab = pathObject;
                     }
-                    Quaternion rotation = Quaternion.Euler(new Vector3(225, (float)descriptionPoints[i].rot, 270));
-                    if(i == 0)
-                    {
-                        rotation = Quaternion.Euler(new Vector3(225, 180 + (float)descriptionPoints[i].rot, 270));
-                    }
+                    Quaternion rotation = Quaternion.Euler(new Vector3(-45,-1 * (float)descriptionPoints[i].rot, 90));
                     anchor[i] = ARAnchorM.AddAnchor(descriptionPoints[i].lat, descriptionPoints[i].lng, cameraGeospatialPose.Altitude + 1, rotation);
-                    
-                    ARAnchorM.anchorPrefab.gameObject.transform.GetChild(3).gameObject.transform.GetComponentInChildren<TextMeshPro>().text = testDescriptions[i];
-                    ARAnchorM.anchorPrefab.gameObject.transform.GetChild(4).gameObject.transform.GetComponentInChildren<TextMeshPro>().text = testDescriptions[i];
-                    Debug.Log("HEAD : " + cameraGeospatialPose.Heading + ", AZI:" + calculateBearing(user, descriptionPoints[i]));
-
+                    ARAnchorM.anchorPrefab.gameObject.transform.GetChild(3).gameObject.transform.GetComponentInChildren<TextMeshPro>().text = realDescriptions[i];
+                    ARAnchorM.anchorPrefab.gameObject.transform.GetChild(4).gameObject.transform.GetComponentInChildren<TextMeshPro>().text = realDescriptions[i];
+                   
+                    isInPath = true;
                     isDescript = true;
                 }
             }
-            for (int j = 0; j < tMLoc.Count; j++)//모든 좌표들의 개수만큼 반복
+            
+            for (int j = 0; j < allCoordi.Count; j++)//모든 좌표들의 개수만큼 반복
             {
-                var pathLength = getPathLength(user, tMLoc[j]);
-                if (!isDescript && pathLength < 15.0)
+                var pLen = getPathLength(user, allCoordi[j]);
+                if (!isDescript && pLen < 15.0)
                 {
                     textP.text = "안내중";//텍스트로 정상작동 출력
+                    isInPath = true;
                 }
             }
-
+            if (!isInPath)
+            {
+                textP.text = "경로 벗어남";
+            }
         }
         else//위치 추척 불가능 시 텍스트만 변경
         {
@@ -194,18 +189,18 @@ public class ARNavigation : MonoBehaviour
             List<MockLocation> coords = getLocations(interval, azimuth, start, end);//두 일반 좌표 사이에 있는 추가 좌표를 interval 미터 간격으로 계산해 리스트에 저장
             foreach (MockLocation mockLocation in coords)
             {
-                Debug.Log("REAL MOCKPOINTS" + mockLocation.lat + ", " + mockLocation.lng + ", " + mockLocation.rot);
+                //Debug.Log("REAL MOCKPOINTS" + mockLocation.lat + ", " + mockLocation.lng + ", " + mockLocation.rot);
                 allCoordi.Add(mockLocation);//일반 좌표 1, 추가좌표들, 일반 좌표2의 방법으로 순서를 지켜 리스트에 저장 
             }
 
         }
 
-        Debug.Log("P LEN: " + allCoordi.Count);
-        for (int i = 0; i < realDescriptionPoints.Count; i++)
+        //Debug.Log("P LEN: " + allCoordi.Count);
+        /*for (int i = 0; i < realDescriptionPoints.Count; i++)
         {
             descriptionPoints.Add(new MockLocation(realDescriptionPoints[i][0], realDescriptionPoints[i][1], 0));
-        }
-        anchor = new ARGeospatialAnchor[allCoordi.Count];//AR 오브젝트(AR 앵커)를 저장할 배열 생성 (길이 == 모든 좌표들의 개수)
+        }*/
+        //anchor = new ARGeospatialAnchor[allCoordi.Count];//AR 오브젝트(AR 앵커)를 저장할 배열 생성 (길이 == 모든 좌표들의 개수)
     }
 
 
